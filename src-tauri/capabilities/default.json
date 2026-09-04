@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "BA仔悬浮桌宠和控制面板的基础权限。",
+  "windows": ["main", "control"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "notification:default",
+    "opener:default"
+  ]
+}

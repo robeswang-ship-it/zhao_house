@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "BA仔 · 小猫管家",
+  "version": "0.4.0",
+  "identifier": "com.ba-zai.cat-butler",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "BA仔",
+        "width": 230,
+        "height": 250,
+        "minWidth": 230,
+        "minHeight": 250,
+        "maxWidth": 230,
+        "maxHeight": 250,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://api.openai.com; img-src 'self' asset: data:;"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "category": "Productivity",
+    "shortDescription": "会聊天、记日程、陪番茄钟的小猫管家",
+    "longDescription": "BA仔是一个本地保存记忆、可连接 AI 的 Windows 桌面小猫管家。",
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "displayLanguageSelector": true,
+        "languages": ["SimpChinese"]
+      }
+    }
+  }
+}

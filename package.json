@@ -1,0 +1,37 @@
+{
+  "name": "ba-zai-cat-butler",
+  "private": true,
+  "version": "0.4.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "check:versions": "node scripts/check-versions.mjs",
+    "prepare:update-release": "node scripts/create-updater-config.mjs",
+    "make:update-manifest": "node scripts/create-latest-json.mjs",
+    "tauri:build:release": "npm run check:versions && npm run prepare:update-release && tauri build --config src-tauri/tauri.release.conf.json",
+    "check": "tsc -b",
+    "verify": "npm run check && npm run build && cargo fmt --manifest-path src-tauri/Cargo.toml -- --check && cargo check --manifest-path src-tauri/Cargo.toml && npm audit --omit=dev"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/plugin-dialog": "^2.3.0",
+    "@tauri-apps/plugin-notification": "^2.3.0",
+    "@tauri-apps/plugin-opener": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.11.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.8.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.0"
+  }
+}
