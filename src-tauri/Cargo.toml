@@ -1,6 +1,6 @@
 [package]
 name = "ba-zai"
-version = "0.4.0"
+version = "0.4.1"
 description = "BA仔 · 小猫管家"
 authors = ["BA仔"]
 edition = "2021"
