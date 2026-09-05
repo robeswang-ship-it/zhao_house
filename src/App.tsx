@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { addMemory, checkDueReminders, checkForUpdate, chooseExcelSchedule, completePomodoro, createEvent, dashboard, downloadAndInstallUpdate, hideControlPanel, isDesktopApp, listChats, listMemories, reportFrontendReady, saveApiKey, sendChat, startWindowDragging, type AvailableUpdate } from "./lib/desktop";
+import { addMemory, checkDueReminders, checkForUpdate, chooseExcelSchedule, completePomodoro, createEvent, dashboard, downloadAndInstallUpdate, hideControlPanel, isDesktopApp, listChats, listMemories, quitApp, reportFrontendReady, saveApiKey, sendChat, startWindowDragging, type AvailableUpdate } from "./lib/desktop";
 import { parseScheduleText } from "./lib/schedule";
 import type { ButlerEvent, ChatMessage, Dashboard, DraftEvent, Memory } from "./lib/types";
 import { readSkin, saveSkin, skins, type PetAction, type Skin } from "./lib/skins";
@@ -289,6 +289,7 @@ export default function App() {
             {(Object.entries(petSizes) as [PetSize, typeof petSizes[PetSize]][]).map(([id, item]) => <button className={petSize === id ? "selected" : ""} type="button" onClick={() => void changePetSize(id)} key={id} aria-pressed={petSize === id}>{item.label}</button>)}
           </div></div>
           <div className="setting-card"><strong>彩蛋</strong><span>豆包踢球模式</span><button type="button" onClick={playKick}>试试看</button></div>
+          <div className="setting-card danger-card"><strong>退出程序</strong><span>关闭桌宠、控制面板和托盘图标</span><button type="button" onClick={() => void quitApp()}>退出 BA仔</button></div>
           <p className="settings-copy tiny">纪念日：每年 9 月 11 日 · 生日：每年 6 月 28 日。以后可以在这里补充更多专属事件与台词。</p>
         </>}
       </section>

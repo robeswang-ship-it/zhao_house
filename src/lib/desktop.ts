@@ -132,6 +132,14 @@ export async function startWindowDragging(): Promise<void> {
   if (isDesktopApp()) await invoke("start_window_drag");
 }
 
+export async function quitApp(): Promise<void> {
+  if (isDesktopApp()) {
+    await invoke("quit_app");
+    return;
+  }
+  window.close();
+}
+
 export async function reportFrontendReady(page: "pet" | "control"): Promise<void> {
   if (isDesktopApp()) await invoke("report_frontend_ready", { page });
 }

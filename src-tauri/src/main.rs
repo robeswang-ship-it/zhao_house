@@ -7,6 +7,11 @@ use reqwest::blocking::Client;
 use rusqlite::{params, Connection, Row};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+#[cfg(windows)]
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Arc,
+};
 use std::{collections::HashSet, env, fs, sync::Mutex, time::Duration as StdDuration};
 use tauri::{
     menu::{Menu, MenuItem},
@@ -752,6 +757,11 @@ fn start_window_drag(window: WebviewWindow) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn quit_app(app: AppHandle) {
+    app.exit(0);
+}
+
+#[tauri::command]
 fn report_frontend_ready(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -779,9 +789,9 @@ fn report_frontend_ready(
 #[tauri::command]
 fn set_pet_size(app: AppHandle, size: String) -> Result<(), String> {
     let (width, height) = match size.as_str() {
-        "small" => (176.0, 220.0),
-        "large" => (300.0, 370.0),
-        _ => (230.0, 285.0),
+        "small" => (120.0, 155.0),
+        "large" => (230.0, 285.0),
+        _ => (168.0, 215.0),
     };
     let pet_window = app
         .get_webview_window("main")
@@ -789,6 +799,37 @@ fn set_pet_size(app: AppHandle, size: String) -> Result<(), String> {
     pet_window
         .set_size(tauri::LogicalSize::new(width, height))
         .map_err(|error| error.to_string())
+}
+
+#[cfg(windows)]
+fn schedule_windows_pet_repaint(window: WebviewWindow, generation: Arc<AtomicU64>) {
+    let current = generation.fetch_add(1, Ordering::SeqCst) + 1;
+    std::thread::spawn(move || {
+        // Native dragging posts several move events. Wait for the final one so the
+        // transparent WebView is recomposed once, without flickering while moving.
+        std::thread::sleep(StdDuration::from_millis(160));
+        if generation.load(Ordering::SeqCst) != current {
+            return;
+        }
+
+        let app = window.app_handle().clone();
+        let window_to_hide = window.clone();
+        let _ = app.run_on_main_thread(move || {
+            let _ = window_to_hide.hide();
+        });
+
+        // Leave one compositor frame between hiding and showing. This clears stale
+        // transparent frames seen on some Windows/WebView2 graphics drivers.
+        std::thread::sleep(StdDuration::from_millis(34));
+        if generation.load(Ordering::SeqCst) != current {
+            return;
+        }
+
+        let app = window.app_handle().clone();
+        let _ = app.run_on_main_thread(move || {
+            let _ = window.show();
+        });
+    });
 }
 
 fn show_control_window(app: &AppHandle) -> Result<(), String> {
@@ -881,6 +922,12 @@ fn create_tray(app: &tauri::App) -> tauri::Result<()> {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(pet_window) = app.get_webview_window("main") {
+                let _ = pet_window.show();
+                let _ = pet_window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
@@ -896,6 +943,8 @@ fn main() {
             if let Some(pet_window) = app.get_webview_window("main") {
                 let pet_for_events = pet_window.clone();
                 let app_for_events = app.handle().clone();
+                #[cfg(windows)]
+                let repaint_generation = Arc::new(AtomicU64::new(0));
                 pet_window.on_window_event(move |event| match event {
                     WindowEvent::CloseRequested { api, .. } => {
                         api.prevent_close();
@@ -903,6 +952,11 @@ fn main() {
                     }
                     WindowEvent::Moved(position) => {
                         persist_pet_position(&app_for_events, *position);
+                        #[cfg(windows)]
+                        schedule_windows_pet_repaint(
+                            pet_for_events.clone(),
+                            repaint_generation.clone(),
+                        );
                     }
                     _ => {}
                 });
@@ -928,6 +982,7 @@ fn main() {
             show_reminder,
             set_pass_through,
             start_window_drag,
+            quit_app,
             report_frontend_ready,
             set_pet_size,
             open_control_panel,

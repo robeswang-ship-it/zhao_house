@@ -5,9 +5,9 @@ export type PetSize = "small" | "medium" | "large";
 export const PET_SIZE_KEY = "ba-zai-pet-size";
 
 export const petSizes: Record<PetSize, { label: string; width: number; height: number }> = {
-  small: { label: "小巧", width: 176, height: 220 },
-  medium: { label: "标准", width: 230, height: 285 },
-  large: { label: "大只", width: 300, height: 370 },
+  small: { label: "迷你", width: 120, height: 155 },
+  medium: { label: "小巧", width: 168, height: 215 },
+  large: { label: "标准", width: 230, height: 285 },
 };
 
 export function readPetSize(): PetSize {

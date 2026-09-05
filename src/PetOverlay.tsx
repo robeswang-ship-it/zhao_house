@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { PetAvatar } from "./components/PetAvatar";
-import { openControlPanel, reportFrontendReady, startWindowDragging } from "./lib/desktop";
+import { openControlPanel, quitApp, reportFrontendReady, startWindowDragging } from "./lib/desktop";
 import { applyPetSize, PET_SIZE_KEY, readPetSize } from "./lib/petSize";
 import { PET_SKIN_KEY, readSkin, type PetAction, type Skin } from "./lib/skins";
 
@@ -37,6 +37,14 @@ export default function PetOverlay() {
   }
 
   return <main className={`pet-overlay ${skin === "snow" ? "snow-pet" : "queen-pet"}`}>
+    <button
+      className="pet-exit"
+      type="button"
+      title="退出 BA仔"
+      aria-label="退出 BA仔"
+      onMouseDown={(event) => event.stopPropagation()}
+      onClick={() => void quitApp()}
+    >×</button>
     <div
       className="pet-drag-surface"
       onMouseDown={(event) => {
