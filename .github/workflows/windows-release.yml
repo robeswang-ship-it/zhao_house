@@ -23,6 +23,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: npm ci
       - run: npm run tauri:build:release
+      - name: Verify both Windows webviews actually start
+        shell: pwsh
+        run: |
+          $env:BAZAI_SMOKE_TEST = "1"
+          $process = Start-Process -FilePath "src-tauri/target/release/ba-zai.exe" -PassThru
+          if (-not $process.WaitForExit(30000)) {
+            Stop-Process -Id $process.Id -Force
+            throw "BA仔 Windows 启动自检超时：桌宠页或控制面板页没有成功挂载。"
+          }
+          if ($process.ExitCode -ne 0) {
+            throw "BA仔 Windows 启动自检失败，退出码：$($process.ExitCode)"
+          }
       - run: npm run make:update-manifest
       - name: Publish signed updater files
         shell: bash

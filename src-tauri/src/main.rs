@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use calamine::{open_workbook_auto, Reader};
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate};
 use keyring::Entry;
@@ -5,12 +7,11 @@ use reqwest::blocking::Client;
 use rusqlite::{params, Connection, Row};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::{fs, sync::Mutex};
+use std::{collections::HashSet, env, fs, sync::Mutex, time::Duration as StdDuration};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, PhysicalPosition, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
-    WindowEvent,
+    AppHandle, Manager, PhysicalPosition, State, WebviewWindow, WindowEvent,
 };
 use tauri_plugin_notification::NotificationExt;
 use uuid::Uuid;
@@ -20,6 +21,7 @@ const KEYRING_ACCOUNT: &str = "openai-api-key";
 
 struct AppState {
     database: Mutex<Connection>,
+    frontends_ready: Mutex<HashSet<String>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -745,8 +747,33 @@ fn set_pass_through(window: WebviewWindow, enabled: bool) -> Result<(), String> 
 }
 
 #[tauri::command]
-fn start_pet_drag(window: WebviewWindow) -> Result<(), String> {
+fn start_window_drag(window: WebviewWindow) -> Result<(), String> {
     window.start_dragging().map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+fn report_frontend_ready(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    page: String,
+) -> Result<(), String> {
+    let should_exit = {
+        let mut ready = state
+            .frontends_ready
+            .lock()
+            .map_err(|_| "启动自检状态暂时不可用".to_owned())?;
+        ready.insert(page);
+        env::var("BAZAI_SMOKE_TEST").as_deref() == Ok("1")
+            && ready.contains("pet")
+            && ready.contains("control")
+    };
+    if should_exit {
+        std::thread::spawn(move || {
+            std::thread::sleep(StdDuration::from_millis(150));
+            app.exit(0);
+        });
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -768,31 +795,9 @@ fn show_control_window(app: &AppHandle) -> Result<(), String> {
     if let Some(pet_window) = app.get_webview_window("main") {
         pet_window.show().map_err(|error| error.to_string())?;
     }
-    if let Some(control_window) = app.get_webview_window("control") {
-        control_window.show().map_err(|error| error.to_string())?;
-        control_window
-            .set_focus()
-            .map_err(|error| error.to_string())?;
-        return Ok(());
-    }
-    let control_window_builder = WebviewWindowBuilder::new(
-        app,
-        "control",
-        // `WebviewUrl::App` accepts an application path, not a URL query.
-        // Load the bundled panel page directly instead of making `?mode=control`
-        // part of a filename on Windows.
-        WebviewUrl::App("control.html".into()),
-    )
-    .title("BA仔 · 小猫管家")
-    .inner_size(410.0, 690.0)
-    .min_inner_size(330.0, 580.0)
-    .decorations(false)
-    .shadow(true)
-    .always_on_top(true)
-    .center();
-    let control_window = control_window_builder
-        .build()
-        .map_err(|error| error.to_string())?;
+    let control_window = app
+        .get_webview_window("control")
+        .ok_or_else(|| "小猫管家窗口没有完成初始化，请重新启动 BA仔".to_owned())?;
     control_window.show().map_err(|error| error.to_string())?;
     control_window
         .set_focus()
@@ -884,6 +889,7 @@ fn main() {
             let database = initialise_database(&app.handle())?;
             app.manage(AppState {
                 database: Mutex::new(database),
+                frontends_ready: Mutex::new(HashSet::new()),
             });
             create_tray(app)?;
             restore_pet_position(&app.handle());
@@ -901,6 +907,11 @@ fn main() {
                     _ => {}
                 });
             }
+            if env::var("BAZAI_SMOKE_TEST").as_deref() == Ok("1") {
+                if let Some(control_window) = app.get_webview_window("control") {
+                    control_window.show()?;
+                }
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -916,7 +927,8 @@ fn main() {
             send_chat,
             show_reminder,
             set_pass_through,
-            start_pet_drag,
+            start_window_drag,
+            report_frontend_ready,
             set_pet_size,
             open_control_panel,
             hide_control_panel

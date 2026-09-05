@@ -128,6 +128,14 @@ export async function hideControlPanel(): Promise<void> {
   window.location.assign("/pet.html");
 }
 
+export async function startWindowDragging(): Promise<void> {
+  if (isDesktopApp()) await invoke("start_window_drag");
+}
+
+export async function reportFrontendReady(page: "pet" | "control"): Promise<void> {
+  if (isDesktopApp()) await invoke("report_frontend_ready", { page });
+}
+
 export async function checkForUpdate(): Promise<AvailableUpdate | null> {
   if (!isDesktopApp()) return null;
   const update = await check({ timeout: 8_000 });

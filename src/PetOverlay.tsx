@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PetAvatar } from "./components/PetAvatar";
-import { openControlPanel } from "./lib/desktop";
-import { applyPetSize, PET_SIZE_KEY, readPetSize, startPetDragging } from "./lib/petSize";
+import { openControlPanel, reportFrontendReady, startWindowDragging } from "./lib/desktop";
+import { applyPetSize, PET_SIZE_KEY, readPetSize } from "./lib/petSize";
 import { PET_SKIN_KEY, readSkin, type PetAction, type Skin } from "./lib/skins";
 
 export default function PetOverlay() {
@@ -21,6 +21,7 @@ export default function PetOverlay() {
 
   useEffect(() => {
     void applyPetSize(readPetSize());
+    void reportFrontendReady("pet");
   }, []);
 
   async function openButler() {
@@ -41,7 +42,7 @@ export default function PetOverlay() {
       onMouseDown={(event) => {
         if (event.button !== 0) return;
         event.preventDefault();
-        void startPetDragging().catch((error) => setOpenError(`移动失败：${String(error)}`));
+        void startWindowDragging().catch((error) => setOpenError(`移动失败：${String(error)}`));
       }}
       title="按住 BA仔拖动"
     >

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { addMemory, checkDueReminders, checkForUpdate, chooseExcelSchedule, completePomodoro, createEvent, dashboard, downloadAndInstallUpdate, hideControlPanel, isDesktopApp, listChats, listMemories, saveApiKey, sendChat, type AvailableUpdate } from "./lib/desktop";
+import { addMemory, checkDueReminders, checkForUpdate, chooseExcelSchedule, completePomodoro, createEvent, dashboard, downloadAndInstallUpdate, hideControlPanel, isDesktopApp, listChats, listMemories, reportFrontendReady, saveApiKey, sendChat, startWindowDragging, type AvailableUpdate } from "./lib/desktop";
 import { parseScheduleText } from "./lib/schedule";
 import type { ButlerEvent, ChatMessage, Dashboard, DraftEvent, Memory } from "./lib/types";
 import { readSkin, saveSkin, skins, type PetAction, type Skin } from "./lib/skins";
@@ -69,7 +69,10 @@ export default function App() {
     setMemories(nextMemories);
   }
 
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => {
+    void reportFrontendReady("control");
+    void refresh();
+  }, []);
 
   useEffect(() => {
     if (isDesktopApp()) void lookForUpdate(true);
@@ -205,7 +208,10 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <header className="topbar" data-tauri-drag-region>
+      <header className="topbar" data-tauri-drag-region onMouseDown={(event) => {
+        if (event.button !== 0 || (event.target as HTMLElement).closest("button")) return;
+        void startWindowDragging();
+      }}>
         <div className="brand" data-tauri-drag-region><span>BA仔</span><small>小猫管家</small></div>
         <div className="top-actions"><button className="claw-button" type="button" onClick={playKick} title="豆包踢球彩蛋">✦</button><button className="close-button" type="button" onClick={() => void hideControlPanel()} title="收起到 BA仔身边">×</button></div>
       </header>

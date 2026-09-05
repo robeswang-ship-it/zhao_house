@@ -19,7 +19,3 @@ export async function applyPetSize(size: PetSize): Promise<void> {
   window.localStorage.setItem(PET_SIZE_KEY, size);
   if ("__TAURI_INTERNALS__" in window) await invoke("set_pet_size", { size });
 }
-
-export async function startPetDragging(): Promise<void> {
-  if ("__TAURI_INTERNALS__" in window) await invoke("start_pet_drag");
-}
