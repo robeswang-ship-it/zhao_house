@@ -39,9 +39,11 @@ export default function PetOverlay() {
   return <main className={`pet-overlay ${skin === "snow" ? "snow-pet" : "queen-pet"}`}>
     <span className="overlay-halo overlay-halo-one" aria-hidden="true" />
     <span className="overlay-halo overlay-halo-two" aria-hidden="true" />
-    <button className="pet-drag-handle" data-tauri-drag-region type="button" title="按住这里拖动 BA仔" aria-label="按住拖动 BA仔">↕</button>
+    <header className="pet-drag-handle" data-tauri-drag-region title="按住这里拖动 BA仔">
+      <span data-tauri-drag-region>BA仔</span><small data-tauri-drag-region>按住这里移动</small>
+    </header>
     <PetAvatar skin={skin} action={action} onClick={openButler} label="点击 BA仔，打开小猫管家" className="overlay-avatar" />
     {hasUpdate && <span className="overlay-update-badge">新</span>}
-    <p className="overlay-hint">点我打开小管家</p>
+    <button className="overlay-hint" type="button" onClick={openButler}>打开小猫管家 ↗</button>
   </main>;
 }

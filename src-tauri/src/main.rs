@@ -765,9 +765,8 @@ fn show_control_window(app: &AppHandle) -> Result<(), String> {
     .min_inner_size(330.0, 580.0)
     .decorations(false)
     .shadow(true)
+    .always_on_top(true)
     .center();
-    #[cfg(not(target_os = "macos"))]
-    let control_window_builder = control_window_builder.transparent(true);
     let control_window = control_window_builder
         .build()
         .map_err(|error| error.to_string())?;
