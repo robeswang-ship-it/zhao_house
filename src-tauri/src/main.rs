@@ -744,6 +744,26 @@ fn set_pass_through(window: WebviewWindow, enabled: bool) -> Result<(), String> 
         .map_err(|error| error.to_string())
 }
 
+#[tauri::command]
+fn start_pet_drag(window: WebviewWindow) -> Result<(), String> {
+    window.start_dragging().map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+fn set_pet_size(app: AppHandle, size: String) -> Result<(), String> {
+    let (width, height) = match size.as_str() {
+        "small" => (176.0, 220.0),
+        "large" => (300.0, 370.0),
+        _ => (230.0, 285.0),
+    };
+    let pet_window = app
+        .get_webview_window("main")
+        .ok_or_else(|| "暂时找不到 BA仔窗口".to_owned())?;
+    pet_window
+        .set_size(tauri::LogicalSize::new(width, height))
+        .map_err(|error| error.to_string())
+}
+
 fn show_control_window(app: &AppHandle) -> Result<(), String> {
     if let Some(pet_window) = app.get_webview_window("main") {
         pet_window.show().map_err(|error| error.to_string())?;
@@ -896,6 +916,8 @@ fn main() {
             send_chat,
             show_reminder,
             set_pass_through,
+            start_pet_drag,
+            set_pet_size,
             open_control_panel,
             hide_control_panel
         ])

@@ -3,6 +3,7 @@ import { addMemory, checkDueReminders, checkForUpdate, chooseExcelSchedule, comp
 import { parseScheduleText } from "./lib/schedule";
 import type { ButlerEvent, ChatMessage, Dashboard, DraftEvent, Memory } from "./lib/types";
 import { readSkin, saveSkin, skins, type PetAction, type Skin } from "./lib/skins";
+import { applyPetSize, petSizes, readPetSize, type PetSize } from "./lib/petSize";
 import { PetAvatar } from "./components/PetAvatar";
 
 type View = "home" | "schedule" | "focus" | "memory" | "settings";
@@ -54,6 +55,7 @@ export default function App() {
   const [apiKey, setApiKey] = useState("");
   const [notice, setNotice] = useState("");
   const [skin, setSkin] = useState<Skin>(readSkin);
+  const [petSize, setPetSize] = useState<PetSize>(readPetSize);
   const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdate | null>(null);
   const [updateState, setUpdateState] = useState<"idle" | "checking" | "latest" | "available" | "installing" | "error">("idle");
   const [updateMessage, setUpdateMessage] = useState("更新服务将在正式发布后启用。");
@@ -191,6 +193,16 @@ export default function App() {
     window.setTimeout(() => setKick(false), 2100);
   }
 
+  async function changePetSize(size: PetSize) {
+    setPetSize(size);
+    try {
+      await applyPetSize(size);
+      setNotice(`BA仔已经变成${petSizes[size].label}尺寸啦。 ✦`);
+    } catch (error) {
+      setNotice(`暂时没能调整大小：${String(error)}`);
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar" data-tauri-drag-region>
@@ -267,6 +279,9 @@ export default function App() {
               </button>)}
             </div>
           </div>
+          <div className="setting-card"><strong>桌宠大小</strong><span>选择后立即生效，并会记住</span><div className="size-picker">
+            {(Object.entries(petSizes) as [PetSize, typeof petSizes[PetSize]][]).map(([id, item]) => <button className={petSize === id ? "selected" : ""} type="button" onClick={() => void changePetSize(id)} key={id} aria-pressed={petSize === id}>{item.label}</button>)}
+          </div></div>
           <div className="setting-card"><strong>彩蛋</strong><span>豆包踢球模式</span><button type="button" onClick={playKick}>试试看</button></div>
           <p className="settings-copy tiny">纪念日：每年 9 月 11 日 · 生日：每年 6 月 28 日。以后可以在这里补充更多专属事件与台词。</p>
         </>}
