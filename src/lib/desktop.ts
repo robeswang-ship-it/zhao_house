@@ -117,7 +117,7 @@ export async function openControlPanel(): Promise<void> {
     await invoke("open_control_panel");
     return;
   }
-  window.location.assign("?mode=control");
+  window.location.assign("/control.html");
 }
 
 export async function hideControlPanel(): Promise<void> {
@@ -125,7 +125,7 @@ export async function hideControlPanel(): Promise<void> {
     await invoke("hide_control_panel");
     return;
   }
-  window.location.assign("/");
+  window.location.assign("/pet.html");
 }
 
 export async function checkForUpdate(): Promise<AvailableUpdate | null> {

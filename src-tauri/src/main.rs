@@ -758,7 +758,10 @@ fn show_control_window(app: &AppHandle) -> Result<(), String> {
     let control_window_builder = WebviewWindowBuilder::new(
         app,
         "control",
-        WebviewUrl::App("index.html?mode=control".into()),
+        // `WebviewUrl::App` accepts an application path, not a URL query.
+        // Load the bundled panel page directly instead of making `?mode=control`
+        // part of a filename on Windows.
+        WebviewUrl::App("control.html".into()),
     )
     .title("BA仔 · 小猫管家")
     .inner_size(410.0, 690.0)
